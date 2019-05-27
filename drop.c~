@@ -55,7 +55,7 @@ event adapt (i++) {
   adapt_wavelet ({f, u}, (double[]){1e-2, 1e-3, 1e-3}, MAXLEVEL, MAXLEVEL - 2);
 }
 
-event interface (t = 0.4.) {
+event interface (t = 0.4) {
   output_facets (f);
 }
 
