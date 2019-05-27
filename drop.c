@@ -4,7 +4,7 @@
 #include "tension.h"
 
 #define Ca 0.6     // Capillary number
-#define Re 0.4     // Reynold number
+#define Re 0.2     // Reynold number
 #define We (Ca*Re) // Weber number
 #define MUr 1.     // ratio of outer(matrix) to inner(drop) viscosity
 #define M 1.       // ratio of outer to inner density
