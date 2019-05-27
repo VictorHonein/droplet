@@ -1,0 +1,94 @@
+#include "navier-stokes/centered.h"
+#include "two-phase.h"
+#include "log-conform.h"
+#include "tension.h"
+
+#define Ca 0.6     // Capillary number
+#define Re 0.3     // Reynold number
+#define We (Ca*Re) // Weber number
+#define MUr 1.     // ratio of outer(matrix) to inner(drop) viscosity
+#define M 1.       // ratio of outer to inner density
+#define Deb 0.4    // Deborah number
+#define Beta 0.5   // ratio of the solvent visc. to the total viscoelastic visc.
+
+int MAXLEVEL = 9;
+
+scalar mupd[], lam[];
+
+int main() {
+  L0 = 16 ;
+  origin (-L0/2, -L0/4.);
+  periodic (right);
+  DT = .1;
+
+  mu1 = MUr*Beta/Re;
+  mu2 = 1./Re;
+  rho1 = M;
+  rho2 = 1.;
+  f.sigma = 1./We;
+  lambda = lam;
+  mup = mupd;
+
+  init_grid (1 << MAXLEVEL);
+  run();
+}
+
+event init (i = 0) {
+
+  mask (y > 4 ? top : none);
+
+  fraction (f, 1. - (sq(x) + sq(y)));
+  foreach()
+    u.x[] = y;
+  boundary ((scalar *){u});
+}
+
+event properties (i++) {
+  foreach () {
+    lam[] = Deb*f[];
+    mupd[] = MUr*(1. - Beta)*f[]/Re;
+  }
+  boundary ({lam, mupd});
+}
+
+event adapt (i++) {
+  adapt_wavelet ({f, u}, (double[]){1e-2, 1e-3, 1e-3}, MAXLEVEL, MAXLEVEL - 2);
+}
+
+event interface (t = 0.4.) {
+  output_facets (f);
+}
+
+event deformation (t += 0.1) {
+  double rmax = -HUGE, rmin = HUGE ;
+  foreach (reduction(max:rmax) reduction(min:rmin)) 
+    if (f[] > 0 && f[] < 1) {
+      coord p;
+      coord n = mycs (point, f);
+      double alpha = plane_alpha (f[], n);
+      plane_area_center (n, alpha, &p);
+      double rad  = sqrt(sq(x + Delta*p.x) + sq(y + Delta*p.y)); 
+      if (rad > rmax)
+	rmax = rad;
+      if (rad < rmin)
+	rmin = rad;
+    }
+  double D = (rmax - rmin)/(rmax + rmin);
+  fprintf (stderr, "%g %g %g %g\n", t, rmin, rmax, D);
+}
+
+/*
+#if 0
+#include "view.h"
+
+event viewing (i += 10) {
+  static FILE * fp = popen ("bppm","w");
+  view (width = 600, height = 300, fov = 10);
+  clear();
+  draw_vof ("f");
+  // squares ("u.y", linear = true);
+  squares ("level");
+  save (fp = fp);
+}
+#endif
+*/
