@@ -3,8 +3,8 @@
 #include "log-conform.h"
 #include "tension.h"
 
-#define Ca 0.6     // Capillary number
-#define Re 0.2     // Reynold number
+#define Ca 2.0     // Capillary number
+#define Re 0.3     // Reynold number
 #define We (Ca*Re) // Weber number
 #define MUr 1.     // ratio of outer(matrix) to inner(drop) viscosity
 #define M 1.       // ratio of outer to inner density
